@@ -1,33 +1,496 @@
-.App {
-  text-align: center;
+/*
+    Animations
+ */
+@keyframes border-pulsate {
+    0% {
+        border-color: rgba(124, 252, 0, 1);
+    }
+    50% {
+        border-color: rgba(124, 252, 0, 0);
+    }
+    100% {
+        border-color: rgba(124, 252, 0, 1);
+    }
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
-  pointer-events: none;
+@-webkit-keyframes pulse {
+    0% {
+        -webkit-box-shadow: 0 0 0 0 rgba(124, 252, 0, 0.4);
+    }
+    70% {
+        -webkit-box-shadow: 0 0 0 10px rgba(124, 252, 0, 0);
+    }
+    100% {
+        -webkit-box-shadow: 0 0 0 0 rgba(124, 252, 0, 0);
+    }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+@keyframes pulse {
+    0% {
+        -moz-box-shadow: 0 0 0 0 rgba(124, 252, 0, 0.4);
+        box-shadow: 0 0 0 0 rgba(124, 252, 0, 0.4);
+    }
+    70% {
+        -moz-box-shadow: 0 0 0 10px rgba(124, 252, 0, 0);
+        box-shadow: 0 0 0 10px rgba(124, 252, 0, 0);
+    }
+    100% {
+        -moz-box-shadow: 0 0 0 0 rgba(124, 252, 0, 0);
+        box-shadow: 0 0 0 0 rgba(124, 252, 0, 0);
+    }
 }
 
-.App-link {
-  color: #61dafb;
+@-webkit-keyframes move-up {
+    0%{
+        -webkit-transform: translateY(0);
+        transform: translateY(0);
+    }
+    100%{
+        -webkit-transform: translateY(-10px);
+        transform: translateY(-10px);
+    }
 }
 
-@keyframes App-logo-spin {
-  from {
+@keyframes move-up {
+    0%{
+        transform: translateY(0);
+    }
+    100%{
+        transform: translateY(-10px);
+    }
+}
+
+
+@-webkit-keyframes move-down {
+    0%{
+        -webkit-transform: translateY(-10px);
+        transform: translateY(-10px);
+    }
+    100%{
+        -webkit-transform: translateY(0px);
+        transform: translateY(0px);
+    }
+}
+
+@keyframes move-down {
+    0%{
+        transform: translateY(-10px);
+    }
+    100%{
+        transform: translateY(0px);
+    }
+}
+
+
+/**
+    played card animations
+ */
+
+/*
+seat 1
+ */
+@-webkit-keyframes seat-1-move-card {
+    0% {
+
+        -webkit-transform: translateX(-20px) translateY(100px);
+        transform: translateX(-20px) translateY(100px);
+    }
+    100% {
+
+        -webkit-transform: translateX(0) translateY(0);
+        transform: translateX(0) translateY(0);
+    }
+}
+@keyframes seat-1-move-card {
+    0% {
+
+        -webkit-transform: translateX(-20px) translateY(100px);
+        transform: translateX(-20px) translateY(100px);
+    }
+    100% {
+
+        -webkit-transform: translateX(0) translateY(0);
+        transform: translateX(0) translateY(0);
+    }
+}
+
+/*
+seat 2
+ */
+@-webkit-keyframes seat-2-move-card {
+    0% {
+
+        -webkit-transform: rotate(50deg) translateX(-80px) translateY(170px);
+        transform: rotate(50deg) translateX(-80px) translateY(170px);
+    }
+    100% {
+
+        -webkit-transform: rotate(50deg) translateX(0) translateY(0);
+        transform: rotate(50deg) translateX(0) translateY(0);
+    }
+}
+@keyframes seat-2-move-card {
+    0% {
+
+        -webkit-transform: rotate(50deg) translateX(-80px) translateY(170px);
+        transform: rotate(50deg) translateX(-80px) translateY(170px);
+    }
+    100% {
+
+        -webkit-transform: rotate(50deg) translateX(0) translateY(0);
+        transform: rotate(50deg) translateX(0) translateY(0);
+    }
+}
+
+/*
+seat 3
+ */
+@-webkit-keyframes seat-3-move-card {
+    0% {
+
+        -webkit-transform: rotate(137deg) translateX(50px) translateY(170px);
+        transform: rotate(137deg) translateX(50px) translateY(170px);
+    }
+    100% {
+
+        -webkit-transform:rotate(137deg) translateX(0) translateY(0);
+        transform: rotate(137deg) translateX(0) translateY(0);
+    }
+}
+@keyframes seat-3-move-card {
+    0% {
+
+        -webkit-transform: rotate(137deg) translateX(50px) translateY(170px);
+        transform: rotate(137deg) translateX(50px) translateY(170px);
+    }
+    100% {
+
+        -webkit-transform:rotate(137deg) translateX(0) translateY(0);
+        transform: rotate(137deg) translateX(0) translateY(0);
+    }
+}
+
+/*
+seat 4
+ */
+@-webkit-keyframes seat-4-move-card {
+    0% {
+
+        -webkit-transform: rotate(-130deg) translateX(-100px) translateY(200px);
+        transform: rotate(-130deg) translateX(-100px) translateY(200px);
+    }
+    100% {
+
+        -webkit-transform: rotate(-137deg) translateX(0) translateY(0);
+        transform: rotate(-137deg) translateX(0) translateY(0);
+    }
+}
+@keyframes seat-4-move-card {
+    0% {
+
+        -webkit-transform: rotate(-130deg) translateX(-100px) translateY(200px);
+        transform: rotate(-130deg) translateX(-100px) translateY(200px);
+    }
+    100% {
+
+        -webkit-transform: rotate(-137deg) translateX(0) translateY(0);
+        transform: rotate(-137deg) translateX(0) translateY(0);
+    }
+}
+
+/*
+seat 5
+ */
+@-webkit-keyframes seat-5-move-card {
+    0% {
+
+        -webkit-transform: rotate(-50deg) translateX(80px) translateY(200px);
+        transform: rotate(-50deg) translateX(80px) translateY(200px);
+    }
+    100% {
+
+        -webkit-transform: rotate(-50deg) translateX(0) translateY(0);
+        transform: rotate(-50deg) translateX(0) translateY(0);
+    }
+}
+@keyframes seat-5-move-card {
+    0% {
+
+        -webkit-transform: rotate(-50deg) translateX(80px) translateY(200px);
+        transform: rotate(-50deg) translateX(80px) translateY(200px);
+    }
+    100% {
+
+        -webkit-transform: rotate(-50deg) translateX(0) translateY(0);
+        transform: rotate(-50deg) translateX(0) translateY(0);
+    }
+}
+
+/*
+    Styles
+ */
+.play-table {
+    background: #938874;
+    width: 914px;
+    height: 701px;
+    border-radius: 100px;
+    padding: 50px;
+    position: relative;
+}
+
+.play-table .play-table-bg{
+    margin: auto;
+    width: 800px;
+}
+
+.play-table .player {
+    position: absolute;
+}
+
+.play-table .player.seat-1 {
+    left: 410px;
+    top: 480px;
+}
+
+.play-table .player.seat-2 {
+    left: 98px;
+    top: 410px;
+}
+
+.play-table .player.seat-3 {
+    left: 98px;
+    top: 97px;
+}
+
+.play-table .player.seat-4 {
+    left: 723px;
+    top: 97px;
+}
+
+.play-table .player.seat-5 {
+    left: 723px;
+    top: 410px;
+}
+
+.play-table .player .player-avatar {
+    position: relative;
+    background: black;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid white;
+    overflow: hidden;
+    padding: 2px;
+    z-index: 300;
+}
+
+.play-table .player.active .player-avatar {
+    border-color: lawngreen;
+    box-shadow: 0 0 0 rgba(124, 252, 0, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.play-table .player .player-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.play-table .player .nickname {
+    position: relative;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    padding: 3px 5px;
+    background-color: #2d3039;
+    border-radius: 10px;
+    margin-top: 5px;
+    z-index: 400;
+}
+
+.play-table .player .points {
+    position: relative;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    padding: 3px 2px;
+    background-color: #2d3039;
+    border-radius: 10px;
+    margin-top: 2px;
+    z-index: 410;
+}
+
+.play-table .player .player-hand {
+    position: absolute;
+    width: 285px;
+    top:0;
+    left: 100px;
+    z-index: 290;
+}
+.play-table .player.opponent .player-hand{
+    width: 76px;
+}
+
+.play-table .player.seat-5 .player-hand{
+    top: -26px;
+    left: -65px;
+    -ms-transform: rotate(-35deg); /* IE 9 */
+    -webkit-transform: rotate(-35deg); /* Safari */
+    transform: rotate(-35deg);
+}
+
+.play-table .player.seat-4 .player-hand{
+    top: 73px;
+    left: -56px;
+    -ms-transform: rotate(-137deg); /* IE 9 */
+    -webkit-transform: rotate(-137deg); /* Safari */
+    transform: rotate(-137deg);
+}
+
+.play-table .player.seat-3 .player-hand{
+    top: 73px;
+    left: 56px;
+    -ms-transform: rotate(137deg); /* IE 9 */
+    -webkit-transform: rotate(137deg); /* Safari */
+    transform: rotate(137deg);
+}
+
+.play-table .player.seat-2 .player-hand{
+    top: -26px;
+    left: 65px;
+    -ms-transform: rotate(35deg); /* IE 9 */
+    -webkit-transform: rotate(35deg); /* Safari */
+    transform: rotate(35deg);
+}
+
+.play-table .player.seat-1 .player-hand{
+    top: -75px;
+    left: -95px;
+    -ms-transform: rotate(0deg); /* IE 9 */
+    -webkit-transform: rotate(0deg); /* Safari */
     transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+}
+
+.play-table .player.opponent .player-hand .player-card {
+    width: 25px;
+    float: left;
+    margin-left: -20px;
+}
+
+.play-table .player .player-hand .player-card {
+    width: 50px;
+    float: left;
+    margin-left: -25px;
+}
+
+.play-table .player.current-player .player-hand .player-card {
+
+    -webkit-animation: move-down 0.25s ease 0s 1 normal both;
+    animation: move-down 0.25s ease 0s 1 normal both;
+}
+
+.play-table .player.current-player .player-hand .player-card.selected {
+    -webkit-animation: move-up 0.25s ease 0s 1 normal both;
+    animation: move-up 0.25s ease 0s 1 normal both;
+}
+
+
+
+.play-table .player .player-hand .player-card:first-child{
+    margin-left: 0;
+}
+
+.play-table .player .player-hand .player-card img {
+    width: 100%;
+}
+
+
+.play-table .played-cards{
+    position: absolute;
+    top:40%;
+    left: 48%;
+    z-index: 600;
+}
+
+.play-table .played-cards .played-card{
+    position: absolute;
+    width: 45px;
+    float: left;
+}
+
+.play-table .played-cards .played-card.seat-1{
+    left: -20px;
+    top: 50px;
+
+    -webkit-animation: seat-1-move-card 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+    animation: seat-1-move-card 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+}
+
+.play-table .played-cards .played-card.seat-2{
+    left: -40px;
+    top: 30px;
+    -ms-transform: rotate(50deg); /* IE 9 */
+    -webkit-animation: seat-2-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    animation: seat-2-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)  both;
+
+}
+
+.play-table .played-cards .played-card.seat-3{
+    left: -60px;
+    top: -10px;
+    -ms-transform: rotate(137deg); /* IE 9 */
+    /*-webkit-transform: rotate(137deg);*/
+    /*transform: rotate(137deg);*/
+
+    -webkit-animation: seat-3-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+    animation: seat-3-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+}
+
+
+.play-table .played-cards .played-card.seat-4{
+    left: 0;
+    top: -10px;
+    -ms-transform: rotate(-137deg); /* IE 9 */
+    -webkit-transform: rotate(-137deg); /* Safari */
+    transform: rotate(-137deg);
+
+
+    -webkit-animation: seat-4-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+    animation: seat-4-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+}
+
+.play-table .played-cards .played-card.seat-5{
+    left: 0;
+    top: 20px;
+    -ms-transform: rotate(-50deg); /* IE 9 */
+
+    -webkit-animation: seat-5-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)    both;
+    animation: seat-5-move-card 0.8s cubic-bezier(0.250, 0.460, 0.450, 0.940)   both;
+}
+
+.play-table .played-cards .played-card img{
+    width: 100%;
+}
+
+.play-table .start-button{
+    position: absolute;
+    left: 381px;
+    top: 273px;
+    border: 6px double white;
+}
+.play-table .not-enough-players-button{
+    position: absolute;
+    left: 310px;
+    top: 273px;
+    border: 6px double white;
+}
+
+.playground{
+    max-width: 920px;
+}
+
+.scoreboard .victory-ani {
+    height: 60px;
 }
