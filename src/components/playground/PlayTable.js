@@ -26,6 +26,7 @@ class PlayTable extends Component {
         activePlayer: null,
     };
 
+
     componentDidUpdate(prevProps) {
         const {currentJoinedPlayer} = this.props;
 

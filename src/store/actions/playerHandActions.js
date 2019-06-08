@@ -12,6 +12,8 @@ export const playCard = (selectedCard) => {
     return (dispatch, getState, {getFirebase}) => {
         let playCard = getFirebase().functions().httpsCallable('playCard');
         dispatch(notifyCardPlay());
+        console.log('playCard function called');
+        //dispatch({type: PlayerHandActionType.PLAY_CARD_SUCCESS});
         playCard({card: selectedCard}).then(() => {
             console.log(PlayerHandActionType.PLAY_CARD_SUCCESS);
             dispatch({type: PlayerHandActionType.PLAY_CARD_SUCCESS});

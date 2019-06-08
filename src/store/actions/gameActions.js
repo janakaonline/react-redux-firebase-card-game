@@ -5,6 +5,10 @@ export const joinGame = () => {
         let joinGame = getFirebase().functions().httpsCallable('joinGame');
         dispatch({type: GameActionTypes.JOINING});
 
+
+        console.log('joinGame function call')
+        /* dispatch({type: GameActionTypes.JOIN_GAME_SUCCESS});*/
+
         joinGame({}).then(() => {
             console.log(GameActionTypes.JOIN_GAME_SUCCESS);
             dispatch({type: GameActionTypes.JOIN_GAME_SUCCESS});
@@ -20,6 +24,9 @@ export const leaveGame = () => {
     return (dispatch, getState, {getFirebase}) => {
         let leaveGame = getFirebase().functions().httpsCallable('leaveGame');
         dispatch({type: GameActionTypes.LEAVING});
+
+        console.log('leaveGame function call')
+        //dispatch({type: GameActionTypes.LEAVE_GAME_SUCCESS});
 
         leaveGame({}).then(() => {
             console.log(GameActionTypes.LEAVE_GAME_SUCCESS);

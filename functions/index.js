@@ -2,21 +2,33 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp(functions.config().firebase);
-
 const db = admin.firestore();
-
-const createNotification = (notification) => {
-    return db.collection('notifications').add(notification);
+const PictureCardValue = {
+    JACK: 11,
+    QUEEN: 12,
+    KING: 13,
+    ACE: 14
 };
 
+//collection refs
+const joinedPlayersRef = db.collection('joined-players');
+const gameRef = db.collection('game');
+const playedCardsRef = db.collection('played-cards');
+const playersRef = db.collection('players');
+const gameHistoryRef = db.collection('game-history');
+const notificationRef = db.collection('notifications');
+
+const createNotification = (notification) => {
+    return notificationRef.add(notification);
+};
 const resetGame = () => {
     return Promise.all([
-        db.collection('game').doc('active_user').set({value: null}),
-        db.collection('game').doc('game_status').set({value: 'Waiting for players'}),
-        db.collection('game').doc('next_action').set({value: null}),
-        db.collection('game').doc('played_rounds').set({value: 0}),
-        db.collection('game').doc('results').delete(),
-        db.collection('played-cards').get().then((snap) => {
+        gameRef.doc('active_user').set({value: null}),
+        gameRef.doc('game_status').set({value: 'Waiting for players'}),
+        gameRef.doc('next_action').set({value: null}),
+        gameRef.doc('played_rounds').set({value: 0}),
+        gameRef.doc('results').delete(),
+        playedCardsRef.get().then((snap) => {
             let batch = db.batch();
             snap.docs.forEach((doc) => {
                 batch.delete(doc.ref);
@@ -26,40 +38,29 @@ const resetGame = () => {
     ])
 };
 
-const PictureCardValue = {
-    JACK: 11,
-    QUEEN: 12,
-    KING: 13,
-    ACE: 14
-};
 
 exports.userJoined = functions.firestore.document('joined-players/{joinedPlayerId}').onCreate(async doc => {
+
+    const dbPromises = [];
     const joinedPlayer = doc.data();
     const notification = {
         content: `${joinedPlayer.nickname} joined the game`,
         player: joinedPlayer.nickname,
         time: admin.firestore.FieldValue.serverTimestamp()
     };
-    const joinedPlayersRef = db.collection('joined-players');
 
-    const dbPromises = [];
     const joinedPlayersSnap = await joinedPlayersRef.orderBy('time', 'desc').get();
-
     if (joinedPlayersSnap.size > 1) {
-        dbPromises.push(db.collection('game').doc('game_status').set({value: 'Ready to start'}));
+        dbPromises.push(gameRef.doc('game_status').set({value: 'Ready to start'}));
     }
 
     if (joinedPlayersSnap.size === 5) {
-        dbPromises.push(db.collection('game').doc('game_status').set({value: 'Starting'}));
-        dbPromises.push(
-            joinedPlayersRef.doc(joinedPlayersSnap.docs[0].ref).update(
-                {
-                    take_action: 'Deal',
-                    take_action_data: {},
-                    take_action_time: admin.firestore.FieldValue.serverTimestamp()
-                }
-            )
-        );
+        dbPromises.push(gameRef.doc('game_status').set({value: 'Starting'}));
+        dbPromises.push(joinedPlayersRef.doc(joinedPlayersSnap.docs[0].ref).update({
+            take_action: 'Deal',
+            take_action_data: {},
+            take_action_time: admin.firestore.FieldValue.serverTimestamp()
+        }));
     }
 
     dbPromises.push(createNotification(notification));
@@ -68,6 +69,8 @@ exports.userJoined = functions.firestore.document('joined-players/{joinedPlayerI
 });
 
 exports.userLeaved = functions.firestore.document('joined-players/{joinedPlayerId}').onDelete(async (doc) => {
+
+    const dbPromises = [];
     const joinedPlayer = doc.data();
     const notification = {
         content: `${joinedPlayer.nickname} left the game`,
@@ -75,13 +78,12 @@ exports.userLeaved = functions.firestore.document('joined-players/{joinedPlayerI
         time: admin.firestore.FieldValue.serverTimestamp()
     };
 
-    const dbPromises = [];
-    const joinedPlayersSnap = await db.collection('joined-players').get();
+
+    const joinedPlayersSnap = await joinedPlayersRef.get();
 
     if (joinedPlayersSnap.size < 2) {
         dbPromises.push(resetGame());
     }
-
 
     dbPromises.push(createNotification(notification));
 
@@ -89,11 +91,13 @@ exports.userLeaved = functions.firestore.document('joined-players/{joinedPlayerI
 });
 
 exports.joinGame = functions.https.onCall(async (data, context) => {
+
+    const dbPromises = [];
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
     }
 
-    const joinedPlayersRef = db.collection('joined-players');
+    console.log('join game function called by ', context.auth.uid);
 
     const joinedPlayersSnapshot = await joinedPlayersRef.get();
 
@@ -101,56 +105,47 @@ exports.joinGame = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('failed-precondition', 'Maximum 5 players already joined the game.');
     }
 
-
-    return db.collection('joined-players').doc(context.auth.uid).get().then((joinedPlayer) => {
-        if (joinedPlayer.exists) {
+    joinedPlayersSnapshot.forEach((doc) => {
+        if (doc.id === context.auth.uid) {
             throw new functions.https.HttpsError('failed-precondition', 'You have already joined the game');
-        } else {
-            return db.collection('players').doc(context.auth.uid).get().then((doc) => {
-                if (!doc.exists) {
-                    throw new functions.https.HttpsError('failed-precondition', 'Invalid user');
-                }
-
-                let player = doc.data();
-
-                db.collection('joined-players').doc(context.auth.uid).set({
-                    nickname: player.nickname,
-                    points: 0,
-                    time: admin.firestore.FieldValue.serverTimestamp()
-                });
-
-                db.collection('players').doc(doc.id).set({
-                    ...player,
-                    status: 'In Game'
-                });
-
-                console.log('join game called by ', context.auth.uid);
-
-                return player;
-            }).catch((error) => {
-                throw new functions.https.HttpsError('unknown', error.message, error);
-            });
         }
-    }).catch((error) => {
-        throw new functions.https.HttpsError('unknown', error.message, error);
     });
+
+    const playerSnap = await playersRef.doc(context.auth.uid).get();
+    const playerData = playerSnap.data();
+
+    dbPromises.push(
+        joinedPlayersRef.doc(context.auth.uid).set({
+            nickname: playerData.nickname,
+            points: 0,
+            time: admin.firestore.FieldValue.serverTimestamp()
+        })
+    );
+
+    dbPromises.push(
+        playersRef.doc(context.auth.uid).set({
+            ...playerData,
+            status: 'In Game'
+        })
+    );
+
+    return Promise.all(dbPromises);
 });
 
 exports.leaveGame = functions.https.onCall((data, context) => {
+
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
     }
 
-    return db.collection('joined-players').doc(context.auth.uid).get().then((joinedPlayerDoc) => {
+    return joinedPlayersRef.doc(context.auth.uid).get().then((joinedPlayerDoc) => {
         if (!joinedPlayerDoc.exists) {
             throw new functions.https.HttpsError('failed-precondition', 'You have not joined the game yet');
         } else {
-            let player = joinedPlayerDoc.data();
+            joinedPlayersRef.doc(context.auth.uid).delete();
 
-            db.collection('joined-players').doc(context.auth.uid).delete();
-
-            db.collection('players').doc(joinedPlayerDoc.id).set({
-                ...player,
+            playersRef.doc(joinedPlayerDoc.id).set({
+                ...joinedPlayerDoc.data(),
                 status: 'Idle'
             });
         }
@@ -160,27 +155,26 @@ exports.leaveGame = functions.https.onCall((data, context) => {
 });
 
 exports.dealCards = functions.https.onCall(async (data, context) => {
+
+    const dbPromises = [];
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
     }
 
-    let joinedPlayers = db.collection('joined-players');
     const cardsToDeal = data.cards;
-    let dbPromises = [];
-
-    const querySnapshot = await joinedPlayers.get();
+    const querySnapshot = await joinedPlayersRef.get();
 
     querySnapshot.forEach((doc) => {
         let player = doc.data();
-        dbPromises.push(joinedPlayers.doc(doc.id).set({
+        dbPromises.push(joinedPlayersRef.doc(doc.id).set({
             ...player,
             cards: cardsToDeal.splice(0, 10)
         }));
     });
 
-    dbPromises.push(db.collection('game').doc('game_status').set({value: 'In progress'}));
-    dbPromises.push(db.collection('game').doc('played_rounds').set({value: 0}));
-    dbPromises.push(db.collection('game').doc('active_user').set({value: context.auth.uid}));
+    dbPromises.push(gameRef.doc('game_status').set({value: 'In progress'}));
+    dbPromises.push(gameRef.doc('played_rounds').set({value: 0}));
+    dbPromises.push(gameRef.doc('active_user').set({value: context.auth.uid}));
 
     return Promise.all(dbPromises).then(() => {
         return 'dealt'
@@ -188,18 +182,13 @@ exports.dealCards = functions.https.onCall(async (data, context) => {
 });
 
 exports.playCard = functions.https.onCall(async (data, context) => {
+
     if (!context.auth) {
         throw new functions.https.HttpsError('failed-precondition', 'The function must be called while authenticated.');
     }
 
     //input data
     const playedCard = data.card;
-
-    //collection refs
-    const joinedPlayersRef = db.collection('joined-players');
-    const gameRef = db.collection('game');
-    const playedCardsRef = db.collection('played-cards');
-    const gameHistoryRef = db.collection('game-history');
 
     //add card to the played cards
     await playedCardsRef.add({
@@ -222,8 +211,6 @@ exports.playCard = functions.https.onCall(async (data, context) => {
         const batch = db.batch();
         let playerNextAction = "NextPlayer";
         let playerNextActionData = {};
-
-        console.log('promise call completed');
 
         //destruct game settings
         let gameSettings = {};
@@ -254,15 +241,12 @@ exports.playCard = functions.https.onCall(async (data, context) => {
         //remove the played card from the player's hand
         currentPlayer.cards.splice(playedCardIndex, 1);
 
-
         //check if this is the last play on this hand
         if (playedCardsSnapshot.docs.length === joinedPlayersSnapshot.docs.length) {
             //this is the last action of the current hand
 
             //valuate who won the hand
-            let highestValuedCard = {
-                value: '0'
-            };
+            let highestValuedCard = playedCard;
 
             playedCardsSnapshot.forEach((doc) => {
                 let card = doc.data();
@@ -348,7 +332,6 @@ exports.playCard = functions.https.onCall(async (data, context) => {
 
         } else {
             //this is not the last action of the current hand
-
 
             //set next player
             let nextUserIndex = joinedPlayersSnapshot.docs.findIndex((doc) => {
