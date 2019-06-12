@@ -10,6 +10,13 @@ const PictureCardValue = {
     ACE: 14
 };
 
+const GameActionType = {
+    StartGame: 'Start Game',
+    JoinGame: 'Join Game',
+    LeaveGame: 'Leave Game',
+    PlayCard: 'Play Card'
+};
+
 //collection refs
 const joinedPlayersRef = db.collection('joined-players');
 const gameRef = db.collection('game');
@@ -21,7 +28,17 @@ const notificationRef = db.collection('notifications');
 const createNotification = (notification) => {
     return notificationRef.add(notification);
 };
-const resetGame = () => {
+const resetGame = async () => {
+    const joinedPlayersSnapshot = await joinedPlayersRef.get();
+
+    joinedPlayersSnapshot.forEach((doc) => {
+        let player = doc.data();
+        joinedPlayersRef.doc(doc.id).set({
+            ...player,
+            cards: []
+        });
+    });
+
     return Promise.all([
         gameRef.doc('active_user').set({value: null}),
         gameRef.doc('game_status').set({value: 'Waiting for players'}),
@@ -38,6 +55,291 @@ const resetGame = () => {
     ])
 };
 
+
+exports.gameActionCreated = functions.firestore.document('game_actions/{actionId}').onCreate(async (doc) => {
+
+    const dbPromises = [];
+    const gameAction = doc.data();
+
+    switch (gameAction.action) {
+        case GameActionType.JoinGame:
+            await joinGame(gameAction.payload.uid);
+            break;
+        case GameActionType.LeaveGame:
+            await leaveGame(gameAction.payload.uid);
+            break;
+        case GameActionType.StartGame:
+            await startGame(gameAction.payload.uid, gameAction.payload.cards);
+            break;
+        case GameActionType.PlayCard:
+            await playCard(gameAction.payload.uid, gameAction.payload.card);
+            break;
+        default:
+            break;
+    }
+
+    return Promise.all(dbPromises);
+});
+
+const joinGame = async (userId) => {
+    const dbPromises = [];
+    const playerSnap = await playersRef.doc(userId).get();
+    const playerData = playerSnap.data();
+
+    dbPromises.push(
+        joinedPlayersRef.doc(userId).set({
+            nickname: playerData.nickname,
+            points: 0,
+            time: admin.firestore.FieldValue.serverTimestamp()
+        })
+    );
+
+    dbPromises.push(
+        playersRef.doc(userId).set({
+            ...playerData,
+            status: 'In Game'
+        })
+    );
+
+    return Promise.all(dbPromises);
+};
+
+const leaveGame = async (userId) => {
+    const dbPromises = [];
+    const joinedPlayerSnap = await joinedPlayersRef.doc(userId).get();
+    if (!joinedPlayerSnap.exists) {
+        throw new functions.https.HttpsError('failed-precondition', 'You have not joined the game yet');
+    }
+    const joinedPlayerDoc = joinedPlayerSnap.data();
+
+    dbPromises.push(joinedPlayersRef.doc(userId).delete());
+
+    dbPromises.push(
+        playersRef.doc(userId).set({
+            ...joinedPlayerDoc,
+            status: 'Idle'
+        })
+    );
+
+    return Promise.all(dbPromises);
+};
+
+const startGame = async (userId, cards) => {
+    const dbPromises = [];
+    const cardsToDeal = cards;
+    const joinedPlayersSnapshot = await joinedPlayersRef.get();
+
+    joinedPlayersSnapshot.forEach((doc) => {
+        let player = doc.data();
+        dbPromises.push(joinedPlayersRef.doc(doc.id).set({
+            ...player,
+            cards: cardsToDeal.splice(0, 10)
+        }));
+    });
+
+    dbPromises.push(gameRef.doc('game_status').set({value: 'In progress'}));
+    dbPromises.push(gameRef.doc('played_rounds').set({value: 0}));
+    dbPromises.push(gameRef.doc('active_user').set({value: userId}));
+
+    return Promise.all(dbPromises).then(() => {
+        return 'dealt'
+    });
+};
+
+const playCard = async (userId, playedCard) => {
+    await playedCardsRef.add({
+        ...playedCard,
+        played_by: userId,
+        time: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return Promise.all([
+        joinedPlayersRef.orderBy('time', 'asc').get(),
+        joinedPlayersRef.doc(userId).get(),
+        gameRef.get(),
+        playedCardsRef.orderBy('time', 'asc').get()
+    ]).then(async (data) => {
+        const joinedPlayersSnapshot = data[0];
+        const currentJoinedPlayerDoc = data[1];
+        const gameSnapshot = data[2];
+        const playedCardsSnapshot = data[3];
+        const batch = db.batch();
+        let playerNextAction = "NextPlayer";
+        let playerNextActionData = {};
+
+        //destruct game settings
+        let gameSettings = {};
+        gameSnapshot.forEach(doc => {
+            gameSettings[doc.id] = doc.data() ? doc.data().value : null;
+        });
+
+        //check preconditions
+        if (!currentJoinedPlayerDoc.exists) {
+            throw new functions.https.HttpsError('failed-precondition', 'You have not joined the game yet');
+        }
+
+        if (!gameSettings.active_user || gameSettings.active_user !== userId) {
+            throw new functions.https.HttpsError('failed-precondition', 'Invalid operation');
+        }
+
+        const currentPlayer = currentJoinedPlayerDoc.data();
+        const playedCardIndex = currentPlayer.cards.findIndex((item) => {
+            return item.code === playedCard.code;
+        });
+        let winner = null;
+
+        //check the played card is a valid card
+        if (playedCardIndex < 0) {
+            throw new functions.https.HttpsError('failed-precondition', 'Invalid card');
+        }
+
+        //remove the played card from the player's hand
+        currentPlayer.cards.splice(playedCardIndex, 1);
+
+        //check if this is the last play on this hand
+        if (playedCardsSnapshot.docs.length === joinedPlayersSnapshot.docs.length) {
+            //this is the last action of the current hand
+
+            //valuate who won the hand
+            let highestValuedCard = playedCard;
+
+            playedCardsSnapshot.forEach((doc) => {
+                let card = doc.data();
+                const cardValue = isNaN(card.value) ? PictureCardValue[card.value] : parseInt(card.value);
+                const highestCardValue = isNaN(highestValuedCard.value) ? PictureCardValue[highestValuedCard.value] : parseInt(highestValuedCard.value);
+                if (cardValue >= highestCardValue) {
+                    highestValuedCard = {...card};
+                }
+
+                //remove card
+                batch.delete(doc.ref);
+            });
+
+            //find the winner of the hand
+            const players = [];
+            joinedPlayersSnapshot.forEach((doc) => {
+                const player = doc.data();
+                if (doc.id === highestValuedCard.played_by) {
+                    player.points = player.points + 1;
+                    winner = {...player, id: doc.id};
+                    //update player points
+                    batch.set(doc.ref, player);
+                }
+
+                players.push(player);
+            });
+            players.sort((a, b) => b.points - a.points);
+
+            if (!winner) {
+                throw new functions.https.HttpsError('failed-precondition', 'Winner is not in the game');
+            }
+
+            gameSettings['results'] = players;
+
+            //check if the game is over
+            if (gameSettings['played_rounds'] && gameSettings['played_rounds'] === 9) {
+                //this is the last play of the game
+
+                const newGameHistoryRef = await gameHistoryRef.add({
+                    result: players,
+                    time: admin.firestore.FieldValue.serverTimestamp()
+                });
+
+                const winnerNames = players.sort((a, b) => b.points - a.points).filter((i) => {
+                    return i.points === players[0].points;
+                }).map((i) => {
+                    return i.nickname;
+                }).join(', ');
+
+                const winnerNotification = {
+                    content: `${winnerNames} won the game`,
+                    player: winnerNames,
+                    time: admin.firestore.FieldValue.serverTimestamp()
+                };
+
+                createNotification(winnerNotification);
+
+                gameSettings['played_rounds'] = 0;
+                gameSettings['game_status'] = 'Finished';
+                gameSettings['next_action'] = 'EndGame';
+
+                playerNextAction = 'ShowResults';
+                playerNextActionData = {
+                    game_history_id: newGameHistoryRef.id
+                }
+
+            } else {
+                gameSettings['next_action'] = 'EndHand';
+                gameSettings['active_user'] = winner.id;
+                playerNextAction = 'ShowHandWinner';
+                playerNextActionData = {
+                    id: winner.id,
+                    nickname: winner.nickname,
+                    winning_card: highestValuedCard,
+                    played_player_id: currentJoinedPlayerDoc.id,
+                    played_player_nickname: currentPlayer.nickname,
+                    played_card: playedCard
+                };
+
+                //increase played rounds
+                gameSettings['played_rounds'] = gameSettings['played_rounds'] ? gameSettings['played_rounds'] + 1 : 1;
+            }
+
+        } else {
+            //this is not the last action of the current hand
+
+            //set next player
+            let nextUserIndex = joinedPlayersSnapshot.docs.findIndex((doc) => {
+                return doc.id === userId
+            }) + 1;
+
+            if (nextUserIndex === joinedPlayersSnapshot.docs.length) {
+                nextUserIndex = 0;
+            }
+
+            const nextUser = joinedPlayersSnapshot.docs[nextUserIndex].data();
+
+            gameSettings['active_user'] = joinedPlayersSnapshot.docs[nextUserIndex].id;
+            gameSettings['next_action'] = 'NextPlayer';
+
+            playerNextAction = 'EndTurn';
+            playerNextActionData = {
+                next_player_id: joinedPlayersSnapshot.docs[nextUserIndex].id,
+                next_player_nickname: nextUser.nickname,
+                played_player_id: currentJoinedPlayerDoc.id,
+                played_player_nickname: currentPlayer.nickname,
+                played_card: playedCard
+            }
+        }
+
+        for (let k in gameSettings) {
+            if (gameSettings.hasOwnProperty(k)) {
+                console.log(`game setting ${k}`);
+                gameRef.doc(k).set({
+                    value: gameSettings[k]
+                })
+            }
+        }
+
+        joinedPlayersSnapshot.forEach((doc) => {
+            const playerData = doc.id === currentJoinedPlayerDoc.id ? currentPlayer : doc.data();
+            const playerPoints = winner && doc.id === winner.id ? winner.points : playerData.points;
+            batch.set(doc.ref, {
+                ...playerData,
+                points: playerPoints,
+                take_action: playerNextAction,
+                take_action_data: playerNextActionData,
+                take_action_time: admin.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        return batch.commit().then(() => {
+            return gameSettings['next_action'];
+        });
+    }).catch((error) => {
+        throw new functions.https.HttpsError('unknown', error.message, error);
+    });
+};
 
 exports.userJoined = functions.firestore.document('joined-players/{joinedPlayerId}').onCreate(async doc => {
 

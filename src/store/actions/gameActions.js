@@ -1,47 +1,48 @@
 import * as GameActionTypes from '../actionTypes/gameActionTypes'
+import * as GameActions from "../../enums/gameActionType";
+import * as GameStatusTypes from "../../enums/gameStatusType";
 
-export const joinGame = () => {
-    return (dispatch, getState, {getFirebase}) => {
-        let joinGame = getFirebase().functions().httpsCallable('joinGame');
+export const joinGame = (uid) => {
+    return (dispatch, getState, {getFirebase, getFirestore}) => {
+        //let joinGame = getFirebase().functions().httpsCallable('joinGame');
         dispatch({type: GameActionTypes.JOINING});
+        const firestore = getFirestore();
 
+        console.log('joinGame function call', uid);
 
-        console.log('joinGame function call')
-        /* dispatch({type: GameActionTypes.JOIN_GAME_SUCCESS});*/
-
-        joinGame({}).then(() => {
+        return firestore.collection('game_actions').add({
+            action: GameActions.JoinGame,
+            payload: {uid},
+        }).then(() => {
             console.log(GameActionTypes.JOIN_GAME_SUCCESS);
             dispatch({type: GameActionTypes.JOIN_GAME_SUCCESS});
         }).catch((error) => {
             console.log(GameActionTypes.JOIN_GAME_FAILED);
             dispatch({type: GameActionTypes.JOIN_GAME_FAILED, error});
         });
-
     }
 };
 
-export const leaveGame = () => {
-    return (dispatch, getState, {getFirebase}) => {
-        let leaveGame = getFirebase().functions().httpsCallable('leaveGame');
+export const leaveGame = (uid) => {
+    return (dispatch, getState, {getFirebase, getFirestore}) => {
+
         dispatch({type: GameActionTypes.LEAVING});
+        console.log('leaveGame function call');
 
-        console.log('leaveGame function call')
-        //dispatch({type: GameActionTypes.LEAVE_GAME_SUCCESS});
-
-        leaveGame({}).then(() => {
-            console.log(GameActionTypes.LEAVE_GAME_SUCCESS);
+        return getFirestore().collection('game_actions').add({
+            action: GameActions.LeaveGame,
+            payload: {uid},
+        }).then(ref => {
             dispatch({type: GameActionTypes.LEAVE_GAME_SUCCESS});
-        }).catch((error) => {
-            console.log(GameActionTypes.LEAVE_GAME_FAILED);
+        }).catch(error => {
             dispatch({type: GameActionTypes.LEAVE_GAME_FAILED, error});
         });
-
     }
 };
 
 export const startGame = () => {
-    return (dispatch, getState, {getFirebase}) => {
-        dispatch({type: GameActionTypes.STARTING});
+    return (dispatch, getState, {getFirestore}) => {
+        return getFirestore().collection('game').doc('game_status').set({value: GameStatusTypes.Starting});
     }
 };
 

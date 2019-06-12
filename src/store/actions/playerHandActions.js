@@ -1,5 +1,6 @@
 import * as PlayerHandActionType from "../actionTypes/playerHandActionTypes";
 import {notifyCardPlay, notifyCardPlayed} from "./gameActions";
+import * as GameActions from "../../enums/gameActionType";
 
 export const selectCard = (selectedCard) => {
     return (dispatch, getState) => {
@@ -8,13 +9,18 @@ export const selectCard = (selectedCard) => {
     }
 };
 
-export const playCard = (selectedCard) => {
-    return (dispatch, getState, {getFirebase}) => {
-        let playCard = getFirebase().functions().httpsCallable('playCard');
+export const playCard = (uid, selectedCard) => {
+    return (dispatch, getState, {getFirebase, getFirestore}) => {
+        //let playCard = getFirebase().functions().httpsCallable('playCard');
+        const firestore = getFirestore();
         dispatch(notifyCardPlay());
         console.log('playCard function called');
         //dispatch({type: PlayerHandActionType.PLAY_CARD_SUCCESS});
-        playCard({card: selectedCard}).then(() => {
+
+        return firestore.collection('game_actions').add({
+            action: GameActions.PlayCard,
+            payload: {uid, card: selectedCard},
+        }).then(() => {
             console.log(PlayerHandActionType.PLAY_CARD_SUCCESS);
             dispatch({type: PlayerHandActionType.PLAY_CARD_SUCCESS});
             dispatch(notifyCardPlayed());
@@ -23,5 +29,15 @@ export const playCard = (selectedCard) => {
             dispatch({type: PlayerHandActionType.PLAY_CARD_ERROR, error});
             dispatch(notifyCardPlayed());
         });
+
+        /*playCard({card: selectedCard}).then(() => {
+            console.log(PlayerHandActionType.PLAY_CARD_SUCCESS);
+            dispatch({type: PlayerHandActionType.PLAY_CARD_SUCCESS});
+            dispatch(notifyCardPlayed());
+        }).catch((error) => {
+            console.log(PlayerHandActionType.PLAY_CARD_ERROR);
+            dispatch({type: PlayerHandActionType.PLAY_CARD_ERROR, error});
+            dispatch(notifyCardPlayed());
+        });*/
     }
 };

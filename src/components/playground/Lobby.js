@@ -16,12 +16,12 @@ class Lobby extends Component {
 
     handleJoinGame = (e) => {
         e.preventDefault();
-        this.props.joinGame(this.state);
+        this.props.joinGame(this.props.auth.uid);
     };
 
     handleLeaveGame = (e) => {
         e.preventDefault();
-        this.props.leaveGame(this.state);
+        this.props.leaveGame(this.props.auth.uid);
     };
 
     renderActionButtons = (player) => {
@@ -124,8 +124,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        joinGame: () => dispatch(joinGame()),
-        leaveGame: () => dispatch(leaveGame()),
+        joinGame: (uid) => dispatch(joinGame(uid)),
+        leaveGame: (uid) => dispatch(leaveGame(uid)),
     }
 };
 

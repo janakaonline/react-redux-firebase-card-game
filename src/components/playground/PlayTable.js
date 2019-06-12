@@ -50,7 +50,7 @@ class PlayTable extends Component {
     };
 
     showResults = (gameHistoryId) => {
-        this.props.leaveGame();
+        this.props.leaveGame(this.props.auth.uid);
         this.props.history.push(`/scoreboard/${gameHistoryId}`);
     };
 
@@ -98,7 +98,7 @@ class PlayTable extends Component {
         });
 
 
-        this.props.leaveGame();
+        this.props.leaveGame(this.props.auth.uid);
     };
 
     handleCancelLeave = (e) => {
@@ -123,7 +123,7 @@ class PlayTable extends Component {
 
     handleStartGame = (e) => {
         e.preventDefault();
-        this.props.dealCards();
+        this.props.dealCards(this.props.auth.uid);
     };
 
     canPlay = () => {
@@ -138,7 +138,7 @@ class PlayTable extends Component {
             return false
         }
 
-        this.props.playCard(this.props.selectedCard);
+        this.props.playCard(this.props.auth.uid, this.props.selectedCard);
     };
 
 
@@ -265,7 +265,7 @@ class PlayTable extends Component {
                                          onClickYes={this.handleLeaveGame}
                 />
 
-                <Modal show={(game && game.gameStarting) || GameStatusType.isGameStarting(this.props)}
+                <Modal show={GameStatusType.isGameStarting(this.props)}
                        backdrop="static" centered={true}>
                     <Modal.Body>
                         <h2>Game is starting... Please wait</h2>
@@ -312,9 +312,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        leaveGame: () => dispatch(leaveGame()),
-        dealCards: () => dispatch(dealCards()),
-        playCard: (selectedCard) => dispatch(playCard(selectedCard)),
+        leaveGame: (uid) => dispatch(leaveGame(uid)),
+        dealCards: (uid) => dispatch(dealCards(uid)),
+        playCard: (uid, selectedCard) => dispatch(playCard(uid, selectedCard)),
     }
 };
 
