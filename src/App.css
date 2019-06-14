@@ -494,3 +494,7 @@ seat 5
 .scoreboard .victory-ani {
     height: 60px;
 }
+
+#preloadImages{
+    display: none;
+}

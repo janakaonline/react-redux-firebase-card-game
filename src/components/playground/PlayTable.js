@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import Player from './Player'
+import PreloadImages from './PreloadImages'
 import {firestoreConnect} from 'react-redux-firebase'
 import {compose} from 'redux'
 import {Button, Modal, Alert} from 'react-bootstrap'
@@ -185,8 +186,7 @@ class PlayTable extends Component {
 
         return (
             orderedPlayerList.map((player, i) => {
-                return <Player player={player} key={player.id} seat={player.seat}
-                               active={this.isActiveUser(player.id)}
+                return <Player player_id={player.id} key={player.id} seat={player.seat}
                                isOpponent={auth.uid !== player.id}/>
             })
         )
@@ -283,13 +283,14 @@ class PlayTable extends Component {
                         <h2>Playing card... Please wait</h2>
                     </Modal.Body>
                 </Modal>
+
+                <PreloadImages />
             </div>
         )
     }
 }
 
 const mapStateToProps = (state) => {
-    console.log(state)
     const game = state.firestore.ordered['game'];
     const joinedPlayers = state.firestore.ordered['joined-players'];
     return {
