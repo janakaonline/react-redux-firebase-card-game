@@ -16,7 +16,10 @@
     "react-toastify": "^5.2.1",
     "redux": "^4.0.1",
     "redux-firestore": "^0.8.0",
-    "redux-thunk": "^2.3.0"
+    "redux-observable": "^1.1.0",
+    "redux-thunk": "^2.3.0",
+    "rxjs": "^6.5.2",
+    "rxjs-compat": "^6.5.2"
   },
   "scripts": {
     "start": "react-scripts start",

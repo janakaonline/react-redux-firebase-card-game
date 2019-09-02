@@ -3,14 +3,14 @@ import {firestoreReducer} from 'redux-firestore'
 import {firebaseReducer} from 'react-redux-firebase'
 
 import authReducer from './authReducer'
-import gameReducer from './gameReducer'
+import gameActionsReducer from './gameActionsReducer'
 import cardDeckReducer from './cardDeckReducer'
 import playersReducer from './playersReducer'
 import playerHandReducer from './playerHandReducer'
 
 const rootReducer = combineReducers({
     auth: authReducer,
-    game: gameReducer,
+    game: gameActionsReducer,
     cardDeck: cardDeckReducer,
     players: playersReducer,
     playerHand: playerHandReducer,

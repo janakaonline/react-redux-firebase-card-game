@@ -6,18 +6,24 @@ import * as serviceWorker from './serviceWorker';
 import {createStore, applyMiddleware, compose} from 'redux'
 import rootReducer from './store/reducers/rootReducer'
 import {Provider} from 'react-redux'
-import thunk from 'redux-thunk'
-import {reactReduxFirebase, getFirebase} from 'react-redux-firebase'
-import {reduxFirestore, getFirestore} from 'redux-firestore'
+import {rootEpic} from './epics';
+import {createEpicMiddleware} from 'redux-observable';
+import {reactReduxFirebase} from 'react-redux-firebase'
+import {reduxFirestore} from 'redux-firestore'
 import fbConfig from './config/fbConfig'
+
+
+const epicMiddleware = createEpicMiddleware();
+
 
 const store = createStore(rootReducer,
     compose(
-        applyMiddleware(thunk.withExtraArgument({getFirestore, getFirebase})),
+        applyMiddleware(epicMiddleware),
         reduxFirestore(fbConfig),
         reactReduxFirebase(fbConfig, {attachAuthIsReady: true, useFirestoreForProfile: true, userProfile: 'players'})
     )
 );
+
 
 store.firebaseAuthIsReady.then(() => {
     ReactDOM.render(<Provider store={store}><App/></Provider>, document.getElementById('root'));
@@ -27,3 +33,5 @@ store.firebaseAuthIsReady.then(() => {
     serviceWorker.unregister();
 });
 
+
+epicMiddleware.run(rootEpic);

@@ -1,8 +1,18 @@
-import fetch from 'cross-fetch'
 import * as CardDeckActionTypes from '../actionTypes/cardDeckActionTypes'
-import {notifyStarted, startGame} from "./gameActions";
-import * as GameActions from "../../enums/gameActionType";
 
+export const dealCards = (uid) => {
+    return {type: CardDeckActionTypes.DEAL_CARDS, payload: uid}
+};
+
+export const dealSuccessful = () => {
+    return {type: CardDeckActionTypes.DEAL_SUCCESSFUL}
+};
+
+export const dealFailed = (error) => {
+    return {type: CardDeckActionTypes.DEAL_FAILED, payload: error}
+};
+
+/*
 export const dealCards = (uid) => {
     return (dispatch, getState, {getFirebase, getFirestore}) => {
         // let dealCards = getFirebase().functions().httpsCallable('dealCards');
@@ -23,14 +33,14 @@ export const dealCards = (uid) => {
                             payload: {uid, cards: data.cards},
                         });
 
-                        /*return dealCards({cards: data.cards}).then(() => {
+                        /!*return dealCards({cards: data.cards}).then(() => {
                             console.log(CardDeckActionTypes.SHUFFLE_SUCCESS);
                             dispatch({type: CardDeckActionTypes.SHUFFLE_SUCCESS});
                             dispatch(notifyStarted());
                         }).catch((error) => {
                             console.log(CardDeckActionTypes.SHUFFLE_FAILED);
                             dispatch({type: CardDeckActionTypes.SHUFFLE_FAILED, error});
-                        });*/
+                        });*!/
                     })
                     .catch((error) => {
                         console.log(CardDeckActionTypes.SHUFFLE_FAILED, error);
@@ -42,4 +52,4 @@ export const dealCards = (uid) => {
                 dispatch({type: CardDeckActionTypes.SHUFFLE_FAILED, error});
             })
     }
-};
+};*/

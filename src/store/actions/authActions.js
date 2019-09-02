@@ -1,77 +1,37 @@
 import * as AuthActionTypes from '../actionTypes/authActionTypes'
-import * as PlayerStatus from '../../enums/playerStatusType'
-import {notifyAuthBusy, notifyAuthComplete} from "./gameActions";
-
-export const signUp = (newUser) => {
-    return (dispatch, getState, {getFirebase, getFirestore}) => {
-        const firebase = getFirebase();
-        const firestore = getFirestore();
-        dispatch(notifyAuthBusy());
-
-        firebase.auth().createUserWithEmailAndPassword(
-            newUser.email,
-            newUser.password
-        ).then((res) => {
-            return firestore.collection('players').doc(res.user.uid).set({
-                nickname: newUser.nickname,
-                points: 0,
-                status: PlayerStatus.Idle
-            });
-
-        }).then(() => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.REGISTER_SUCCESS
-            })
-        }).catch((error) => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.REGISTER_ERROR,
-                error
-            })
-        })
-    }
-};
 
 export const signIn = (credentials) => {
-    return (dispatch, getState, {getFirebase}) => {
-        const firebase = getFirebase();
-        dispatch(notifyAuthBusy());
+    return {type: AuthActionTypes.LOGIN_USER, payload: credentials}
+};
 
-        firebase.auth().signInWithEmailAndPassword(
-            credentials.email,
-            credentials.password
-        ).then(() => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.LOGIN_SUCCESS
-            })
-        }).catch((error) => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.LOGIN_ERROR,
-                error
-            })
-        })
-    }
+export const signInSuccessful = () => {
+    return {type: AuthActionTypes.LOGIN_SUCCESS}
+};
+
+export const signInFailed = (error) => {
+    return {type: AuthActionTypes.LOGIN_ERROR, payload: error}
+};
+
+export const signUp = (newUser) => {
+    return {type: AuthActionTypes.REGISTER_USER, payload: newUser}
+};
+
+export const signUpSuccessful = () => {
+    return {type: AuthActionTypes.REGISTER_SUCCESS}
+};
+
+export const signUpFailed = (error) => {
+    return {type: AuthActionTypes.REGISTER_ERROR, payload: error}
 };
 
 export const signOut = () => {
-    return (dispatch, getState, {getFirebase}) => {
-        const firebase = getFirebase();
-        dispatch(notifyAuthBusy());
+    return {type: AuthActionTypes.LOGOUT_USER}
+};
 
-        firebase.auth().signOut().then(() => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.LOGOUT_SUCCESS
-            })
-        }).catch((error) => {
-            dispatch(notifyAuthComplete());
-            dispatch({
-                type: AuthActionTypes.LOGOUT_ERROR,
-                error
-            })
-        })
-    }
+export const signOutSuccessful = () => {
+    return {type: AuthActionTypes.LOGOUT_SUCCESS}
+};
+
+export const signOutFailed = (error) => {
+    return {type: AuthActionTypes.LOGOUT_ERROR, payload: error}
 };

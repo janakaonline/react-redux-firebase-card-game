@@ -33,7 +33,7 @@ class PlayTable extends Component {
 
         if (currentJoinedPlayer && prevProps.currentJoinedPlayer
             && currentJoinedPlayer.take_action_time !== prevProps.currentJoinedPlayer.take_action_time) {
-            console.log(prevProps, currentJoinedPlayer.take_action, currentJoinedPlayer.take_action_data);
+            // console.log(prevProps, currentJoinedPlayer.take_action, currentJoinedPlayer.take_action_data);
             this.processNextAction(currentJoinedPlayer.take_action, currentJoinedPlayer.take_action_data);
         }
     };
@@ -51,19 +51,19 @@ class PlayTable extends Component {
     };
 
     showResults = (gameHistoryId) => {
-        this.props.leaveGame(this.props.auth.uid);
+        this.props.leaveGame(this.props.fbAuth.uid);
         this.props.history.push(`/scoreboard/${gameHistoryId}`);
     };
 
     showHandWinner = (winnerId, nickname, card) => {
         const cardName = ucFirst(card.value) + ' of ' + ucFirst(card.suit);
 
-        console.log('##################calling winner toast', cardName);
+        // console.log('##################calling winner toast', cardName);
         toast.info(`${nickname} won the hand with the high card ${cardName}`);
     };
 
     getSeatingMapping = (() => {
-        const {joinedPlayers, auth} = this.props;
+        const {joinedPlayers, fbAuth} = this.props;
         const seatingMapping = {};
 
         if (!joinedPlayers) {
@@ -71,7 +71,7 @@ class PlayTable extends Component {
         }
 
         const joinedPlayersCopy = JSON.parse(JSON.stringify(joinedPlayers));
-        const currentIndexOfPlayer = joinedPlayersCopy.map(x => x.id).indexOf(auth.uid);
+        const currentIndexOfPlayer = joinedPlayersCopy.map(x => x.id).indexOf(fbAuth.uid);
         const playerToLeft = joinedPlayersCopy.slice(currentIndexOfPlayer, joinedPlayersCopy.length);
         const playerToRight = joinedPlayersCopy.slice(null, currentIndexOfPlayer);
 
@@ -99,7 +99,7 @@ class PlayTable extends Component {
         });
 
 
-        this.props.leaveGame(this.props.auth.uid);
+        this.props.leaveGame(this.props.fbAuth.uid);
     };
 
     handleCancelLeave = (e) => {
@@ -124,12 +124,12 @@ class PlayTable extends Component {
 
     handleStartGame = (e) => {
         e.preventDefault();
-        this.props.dealCards(this.props.auth.uid);
+        this.props.dealCards(this.props.fbAuth.uid);
     };
 
     canPlay = () => {
-        const {auth, selectedCard, game} = this.props;
-        return this.isActiveUser(auth.uid) && !!selectedCard && GameStatusType.isGameInProgress(this.props)
+        const {fbAuth, selectedCard, game} = this.props;
+        return this.isActiveUser(fbAuth.uid) && !!selectedCard && GameStatusType.isGameInProgress(this.props)
             && !game.playingCard
     };
 
@@ -139,7 +139,7 @@ class PlayTable extends Component {
             return false
         }
 
-        this.props.playCard(this.props.auth.uid, this.props.selectedCard);
+        this.props.playCard(this.props.fbAuth.uid, this.props.selectedCard);
     };
 
 
@@ -159,14 +159,14 @@ class PlayTable extends Component {
     };
 
     renderPlayers = () => {
-        const {auth, joinedPlayers} = this.props;
+        const {fbAuth, joinedPlayers} = this.props;
 
         if (!joinedPlayers) {
             return null;
         }
 
         const joinedPlayersCopy = JSON.parse(JSON.stringify(joinedPlayers));
-        const currentIndexOfPlayer = joinedPlayersCopy.map(x => x.id).indexOf(auth.uid);
+        const currentIndexOfPlayer = joinedPlayersCopy.map(x => x.id).indexOf(fbAuth.uid);
         const playerToLeft = joinedPlayersCopy.slice(currentIndexOfPlayer, joinedPlayersCopy.length);
         const playerToRight = joinedPlayersCopy.slice(null, currentIndexOfPlayer);
 
@@ -187,7 +187,7 @@ class PlayTable extends Component {
         return (
             orderedPlayerList.map((player, i) => {
                 return <Player player_id={player.id} key={player.id} seat={player.seat}
-                               isOpponent={auth.uid !== player.id}/>
+                               isOpponent={fbAuth.uid !== player.id}/>
             })
         )
     };
@@ -209,9 +209,9 @@ class PlayTable extends Component {
 
 
     render() {
-        const {auth, profile, game, joinedPlayers} = this.props;
+        const {fbAuth, profile, game, joinedPlayers} = this.props;
 
-        if (!auth.uid) {
+        if (!fbAuth.uid) {
             return <Redirect to="sign-in"/>
         }
 
@@ -235,13 +235,6 @@ class PlayTable extends Component {
                     <div className="player-list">
                         {this.renderPlayers()}
                     </div>
-
-
-                    {/*{game && game.gameStarting
-                    ?
-
-                    :
-                    }*/}
 
                     {GameStatusType.isReadyToStart(this.props) || GameStatusType.isWaitingForPlayers(this.props)
                         ?
@@ -298,7 +291,7 @@ const mapStateToProps = (state) => {
         joinedPlayers: joinedPlayers,
         currentJoinedPlayer: joinedPlayers && joinedPlayers.find(kvp => kvp.id === state.firebase.auth.uid),
         profile: state.firebase.profile,
-        auth: state.firebase.auth,
+        fbAuth: state.firebase.auth,
         selectedCard: state.playerHand.selectedCard,
         activeUser: game && game.find(kvp => {
             return kvp.id === 'active_user';

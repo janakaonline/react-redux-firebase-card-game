@@ -11,7 +11,7 @@ const playersReducer = (state = initState, action) => {
         case PlayerHandActionType.CARD_SELECTED:
             return {
                 ...state,
-                selectedCard: action.selectedCard
+                selectedCard: action.payload
             };
         case PlayerHandActionType.PLAY_CARD_SUCCESS:
             return {

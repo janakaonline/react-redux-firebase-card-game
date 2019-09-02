@@ -9,9 +9,9 @@ const initState = {
     authBusy: false,
 };
 
-const gameReducer = (state = initState, action) => {
+const gameActionsReducer = (state = initState, action) => {
     switch (action.type) {
-        case GameActionTypes.JOINING:
+        case GameActionTypes.JOIN_GAME:
             return {
                 ...state,
                 joining: true
@@ -30,10 +30,12 @@ const gameReducer = (state = initState, action) => {
         case GameActionTypes.JOIN_GAME_FAILED:
             return {
                 ...state,
-                gameError: action.error.message,
+                gameError: action.payload.message,
                 joining: false
             };
-        case GameActionTypes.LEAVING:
+
+
+        case GameActionTypes.LEAVE_GAME:
             return {
                 ...state,
                 leaving: true,
@@ -52,9 +54,11 @@ const gameReducer = (state = initState, action) => {
         case GameActionTypes.LEAVE_GAME_FAILED:
             return {
                 ...state,
-                gameError: action.error.message,
+                gameError: action.payload.message,
                 leaving: false,
             };
+
+
         case GameActionTypes.STARTING:
             return {
                 ...state,
@@ -91,4 +95,4 @@ const gameReducer = (state = initState, action) => {
     }
 };
 
-export default gameReducer
+export default gameActionsReducer

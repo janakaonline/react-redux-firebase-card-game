@@ -7,8 +7,7 @@ import GameStatus from './GameStatus'
 import * as PlayerStatusType from '../../enums/playerStatusType'
 import * as GameStatusType from '../../enums/gameStatusType'
 import Notifications from './Notifications'
-import {joinGame} from "../../store/actions/gameActions";
-import {leaveGame} from "../../store/actions/gameActions";
+import {joinGame, leaveGame} from "../../store/actions/gameActions";
 import {Button, Badge} from 'react-bootstrap'
 
 
@@ -16,12 +15,12 @@ class Lobby extends Component {
 
     handleJoinGame = (e) => {
         e.preventDefault();
-        this.props.joinGame(this.props.auth.uid);
+        this.props.joinGame(this.props.fbAuth.uid);
     };
 
     handleLeaveGame = (e) => {
         e.preventDefault();
-        this.props.leaveGame(this.props.auth.uid);
+        this.props.leaveGame(this.props.fbAuth.uid);
     };
 
     renderActionButtons = (player) => {
@@ -57,7 +56,7 @@ class Lobby extends Component {
 
                     <td>{player.status}</td>
                     <td>
-                        {player.id === this.props.auth.uid ? this.renderActionButtons(player) : null}
+                        {player.id === this.props.fbAuth.uid ? this.renderActionButtons(player) : null}
                     </td>
                 </tr>
             )
@@ -65,13 +64,13 @@ class Lobby extends Component {
     };
 
     render() {
-        const {auth, gameStatus, notifications, profile} = this.props;
+        const {fbAuth, gameStatus, notifications, profile} = this.props;
 
-        if (!auth.uid) {
+        if (!fbAuth.uid) {
             return <Redirect to="sign-in"/>
         }
 
-        if (profile.status !== PlayerStatusType.Idle) {
+        if (profile.status === PlayerStatusType.InGame) {
             return <Redirect to="table"/>
         }
 
@@ -117,7 +116,7 @@ const mapStateToProps = (state) => {
         players: state.firestore.ordered.players,
         gameStatus: state.firestore.ordered.game,
         notifications: state.firestore.ordered.notifications,
-        auth: state.firebase.auth,
+        fbAuth: state.firebase.auth,
         game: state.game,
     }
 };
@@ -132,7 +131,7 @@ const mapDispatchToProps = (dispatch) => {
 export default compose(
     connect(mapStateToProps, mapDispatchToProps),
     firestoreConnect([
-        {collection: 'players'},
+        {collection: 'players', where: ['status', '<', PlayerStatusType.Offline]},
         {collection: 'game', doc: 'game_status'},
         {collection: 'notifications', limit: 5, orderBy: ['time', 'desc']}
     ])

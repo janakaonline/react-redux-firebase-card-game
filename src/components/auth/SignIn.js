@@ -24,9 +24,9 @@ class SignIn extends Component {
 
     render() {
 
-        const {authError, auth, game} = this.props;
+        const {authError, fbAuth, authBusy} = this.props;
 
-        if (auth.uid) {
+        if (fbAuth.uid) {
             return <Redirect to="/"/>
         }
 
@@ -35,7 +35,7 @@ class SignIn extends Component {
                 <div className="row justify-content-md-center">
                     <div className="col-2"/>
                     <form onSubmit={this.handleSubmit} className="col">
-                        <fieldset disabled={!game || game.authBusy}>
+                        <fieldset disabled={authBusy}>
                             <h3>Sign in</h3>
 
                             {
@@ -57,7 +57,7 @@ class SignIn extends Component {
                                        onChange={this.handleChange}/>
                             </div>
                             <Button variant="primary" type="submit">
-                                {game && !game.authBusy ? 'Sign in' : 'Please wait...'}
+                                {!authBusy ? 'Sign in' : 'Please wait...'}
                             </Button>
                         </fieldset>
                     </form>
@@ -71,8 +71,8 @@ class SignIn extends Component {
 const mapStateToProps = (state) => {
     return {
         authError: state.auth.authError,
-        auth: state.firebase.auth,
-        game: state.game,
+        authBusy: state.auth.authBusy,
+        fbAuth: state.firebase.auth,
     }
 };
 

@@ -1,5 +1,3 @@
-export const SHUFFLE_SUCCESS = 'cardDeck/SHUFFLE_SUCCESS';
-export const SHUFFLE_FAILED = 'cardDeck/SHUFFLE_FAILED';
-export const DRAW_SUCCESS = 'cardDeck/DRAW_SUCCESS';
-export const DRAW_FAILED = 'cardDeck/DRAW_FAILED';
-export const DEAL_STARTED = 'cardDeck/DEAL_STARTED';
+export const DEAL_CARDS = 'cardDeck/DEAL_CARDS';
+export const DEAL_SUCCESSFUL = 'cardDeck/DEAL_SUCCESSFUL';
+export const DEAL_FAILED = 'cardDeck/DEAL_FAILED';
